@@ -10,9 +10,13 @@ module Logic where
   infixr 5 _∨_
   infixr 6 _∧_
 
-  -- Unit type
+  -- Unit type Prop
   data ⊤ : Prop where
     triv : ⊤
+
+  -- Unit type Set
+  data 𝟙 {l} : Set l where
+    ★ : 𝟙 
 
   -- Empty type Prop
   data ⊥ : Prop where
@@ -21,13 +25,15 @@ module Logic where
   ⊥-elim ()
 
   -- Empty type Set
-  data ∅ {l} : Set l where
+  data 𝟘 {l} : Set l where
 
-  ∅-elim : ∀{l}{l'}{A : Set l} → ∅ {l'} → A
-  ∅-elim ()
+  𝟘-elim : ∀{l}{l'}{A : Set l} → 𝟘 {l'} → A
+  𝟘-elim ()
 
-  ∅-elim-prop : ∀{l}{l'}{A : Prop l} → ∅ {l'} → A
-  ∅-elim-prop ()
+  -- Bool type
+  data 𝟚 {l} : Set l where
+    tt : 𝟚
+    ff : 𝟚
   
   -- Negation
   ¬ : Prop → Prop

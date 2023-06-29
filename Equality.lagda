@@ -93,13 +93,4 @@ module Equality where
     g' (b (f x)) ≡⟨ cong⟨ (λ y → g' (y x)) ⟩ df ⟩
     refl)
 
-  ----------
-
-  ∅-fun : ∀{l}{l'} → ∅ {l} → ∅ {l'}
-  ∅-fun = λ ()
-
-  ∅-fun-uniq : ∀{l}{l'}{A : Set l} → (f1 f2 : A → ∅ {l'}) → f1 ≡ f2
-  ∅-fun-uniq {_}{_}{A} f1 f2 = funext λ x → ∅-elim-prop (f1 x)
-
-
 \end{code}

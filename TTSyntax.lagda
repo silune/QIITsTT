@@ -32,7 +32,7 @@ module I where
     
     -- Types
     U     : {Γ : Con} → Ty Γ
-    El    : {Γ : Con} → Tm Γ U → Ty Γ
+    El    : {Γ : Con} → Ty (Γ ▷ U)
     _[_]  : {Γ Δ : Con} → Ty Γ → Sub Δ Γ → Ty Δ
     Π     : {Γ : Con}→ (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
     
@@ -54,7 +54,7 @@ module I where
     -- some requires transport
     lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
     U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
-    El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → (El a) [ σ ] ≡ El (transp⟨ Tm Δ ⟩ U[] (a ⟦ σ ⟧))
+    El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
     -- some even requires additional equalities
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (q ⟦ ⟨ u ⟩ ⟧) ≡ u
@@ -86,7 +86,7 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     _▷_   : (Γ : Con) → Ty Γ → Con
     
     U     : {Γ : Con} → Ty Γ
-    El    : {Γ : Con} → Tm Γ U → Ty Γ
+    El    : {Γ : Con} → Ty (Γ ▷ U)
     _[_]  : {Γ Δ : Con} → Ty Γ → Sub Δ Γ → Ty Δ
     Π     : {Γ : Con}→ (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
     
@@ -104,7 +104,7 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     η     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm Γ (Π A B)} → lam (app t) ≡ t
     lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
     U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
-    El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → (El a) [ σ ] ≡ El (transp⟨ Tm Δ ⟩ U[] (a ⟦ σ ⟧))
+    El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (q ⟦ ⟨ u ⟩ ⟧) ≡ u
     q+    : {Γ Δ : Con}{A : Ty Γ}{σ : Sub Δ Γ} → (e : A [ ρ ] [ σ ⁺ ] ≡ A [ σ ] [ ρ ]) →
@@ -126,7 +126,7 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
 
     ⟦U⟧T   : {Γ : I.Con} → ⟦ I.U {Γ} ⟧T ≡ U {⟦ Γ ⟧C}
     {-# REWRITE ⟦U⟧T #-}
-    ⟦El⟧T  : {Γ : I.Con}{t : I.Tm Γ I.U} → ⟦ I.El t ⟧T ≡ El ⟦ t ⟧t
+    ⟦El⟧T  : {Γ : I.Con} → ⟦ I.El {Γ} ⟧T ≡ El
     ⟦[]⟧T  : {Δ Γ : I.Con}{A : I.Ty Γ}{σ : I.Sub Δ Γ} → ⟦ A I.[ σ ] ⟧T ≡ ⟦ A ⟧T [ ⟦ σ ⟧S ]
     ⟦Π⟧T   : {Γ : I.Con}{A : I.Ty Γ}{B : I.Ty (Γ I.▷ A)} → ⟦ I.Π A B ⟧T ≡ Π ⟦ A ⟧T ⟦ B ⟧T
     {-# REWRITE ⟦El⟧T ⟦[]⟧T ⟦Π⟧T #-}

@@ -10,6 +10,7 @@ open import Agda.Primitive
 module Equality where
 
   infixr 4 _≡_
+  infixr 4 _,=_
   infixr 2 _≡⟨_⟩_
   infixr 5 _∘_
 
@@ -41,11 +42,11 @@ module Equality where
   symetry : ∀{l}{A : Set l}{x y : A} → x ≡ y → y ≡ x
   symetry refl = refl
 
-  transitivity : ∀{l}{A : Set l}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
-  transitivity refl refl = refl
+  trans : ∀{l}{A : Set l}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
+  trans refl refl = refl
 
   _≡⟨_⟩_ : ∀{l}{A : Set l}{y z : A} → (x : A) → x ≡ y → y ≡ z → x ≡ z
-  x ≡⟨ eqy ⟩ eqz = transitivity eqy eqz
+  x ≡⟨ eqy ⟩ eqz = trans eqy eqz
 
   -- (lemma 2.2.1 HoTT)
   cong⟨_⟩ : ∀{l}{A : Set l}{l'}{B : Set l'}(f : A → B){x y : A} → x ≡ y → f x ≡ f y
@@ -55,24 +56,26 @@ module Equality where
   postulate transp⟨_⟩ : ∀{l}{A : Set l}{l'}(P : A → Set l'){x y : A} → x ≡ y → P x → P y
   -- transp⟨ P ⟩ refl px = px
 
-  -- (why ?)
   postulate transprefl : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a : A}{e : a ≡ a}{p : P a} → transp⟨ P ⟩ e p ≡ p
   {-# REWRITE transprefl #-}
 
-  transpΣ : ∀{l}{l'} → {A : Set l}{B : A → Set l'}{x x' : A} → (e : x ≡ x') →
-                                                  {y : B x}{y' : B x'} → transp⟨ B ⟩ e y ≡ y' →
-                                                  (x , y) ≡ (x' , y')
-  transpΣ refl refl = refl
+  _,=_ : ∀{l}{l'} → {A : Set l}{x x' : A} → (e : x ≡ x') →
+                    {B : A → Set l'}{y : B x}{y' : B x'} → transp⟨ B ⟩ e y ≡ y' →
+                    (x , y) ≡ (x' , y')
+  refl ,= refl = refl
 
-  transptransp : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Set ℓ'){a a' a'' : A}(e : a ≡ a'){e' : a' ≡ a''}{p : P a} → transp⟨ P ⟩ e' (transp⟨ P ⟩ e p) ≡ transp⟨ P ⟩ (a ≡⟨ e ⟩ e') p
-  transptransp P refl {refl} = refl
+  _,×=_ : ∀{l}{l'} → {A : Set l}{x x' : A} → (ea : x ≡ x') →
+                     {B : Set l'}{y y' : B} → (eb : y ≡ y') →
+                     (x , y) ≡ (x' , y')
+  refl ,×= refl = refl
+
+  transp× : ∀{l}{l'}{l''}{A : Set l}{B : A → Set l'}{C : A → Set l''}{a a' : A}{x : B a × C a} → (e : a ≡ a') →
+            transp⟨ (λ a → B a × C a) ⟩ e x ≡ (transp⟨ B ⟩ e (pr₁ x)) , (transp⟨ C ⟩ e (pr₂ x))
+  transp× refl = refl
 
   -- (lemma 2.3.5 HoTT)
   transpconst⟨_⟩ : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y} → (p : P) → transp⟨ (λ _ → P) ⟩ eq p ≡ p
   transpconst⟨_⟩ {eq = refl} p = refl
-
-  transpEq : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y}{p p' : P} -> p ≡ p' → transp⟨ (λ _ → P) ⟩ eq p ≡ p'
-  transpEq {l}{A}{l'}{P}{x}{y}{refl}{p} refl = transpconst⟨_⟩ {l}{A}{l'}{P}{x}{y}{refl} p
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 
@@ -82,15 +85,5 @@ module Equality where
 
   _∘_ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : Set l''} → (f : B → C) → (g : A → B) → (A → C)
   f ∘ g = λ x → f (g x)
-
-  concatdiag : ∀{A B C A' B' C' : Set} → (f : A → B) → (g : B → C) →
-                                             (a : A → A') → (b : B → B') → (c : C → C') →
-                                             (f' : A' → B') → (g' : B' → C') →
-                                             (b ∘ f ≡ f' ∘ a) → (c ∘ g ≡ g' ∘ b) →
-                                             (c ∘ g ∘ f ≡ g' ∘ f' ∘ a)
-  concatdiag f g a b c f' g' df dg = funext (λ x →
-    c ( g (f x)) ≡⟨ cong⟨ (λ y → y (f x)) ⟩ dg ⟩
-    g' (b (f x)) ≡⟨ cong⟨ (λ y → g' (y x)) ⟩ df ⟩
-    refl)
 
 \end{code}

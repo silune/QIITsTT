@@ -74,8 +74,8 @@ module Equality where
   transp× refl = refl
 
   -- (lemma 2.3.5 HoTT)
-  transpconst⟨_⟩ : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y} → (p : P) → transp⟨ (λ _ → P) ⟩ eq p ≡ p
-  transpconst⟨_⟩ {eq = refl} p = refl
+  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y}{p p' : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
+  transpconst {eq = refl} = refl
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 

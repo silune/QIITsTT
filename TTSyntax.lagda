@@ -51,9 +51,9 @@ module I where
     Π[]   : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{σ : Sub Δ Γ} → Π A B [ σ ] ≡ Π (A [ σ ]) (B [ σ ⁺ ])
     β     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B} → app (lam t) ≡ t
     η     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm Γ (Π A B)} → lam (app t) ≡ t
+    U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
     -- some requires transport
     lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
-    U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
     El[]  : {Γ Δ : Con}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
     -- some even requires additional equalities
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
@@ -109,10 +109,10 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
              transp⟨ Tm• (Γ• ▷• A•) B• ⟩ I.β (app• (lam• t•)) ≡ t•
     η•     : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• Γ• A}{B}{B• : Ty• (Γ• ▷• A•) B}{t}{t• : Tm• Γ• (Π• A• B•) t} →
              transp⟨ Tm• Γ• (Π• A• B•) ⟩ I.η (lam• (app• t•)) ≡ t•
+    U[]•   : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{σ}{σ• : Sub• Δ• Γ• σ} → transp⟨ Ty• Δ• ⟩ I.U[] (U• [ σ• ]•) ≡ U•
     lam[]• : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{A}{A• : Ty• Γ• A}{B}{B• : Ty• (Γ• ▷• A•) B}{t}{t• : Tm• (Γ• ▷• A•) B• t}{σ}{σ• : Sub• Δ• Γ• σ} →
              transp⟨ (λ {(C , C• , t) → Tm• Δ• C• t}) ⟩ (I.Π[] ,= trans (transp× I.Π[]) (Π[]• ,×= I.lam[]))
              ((lam• t•) ⟦ σ• ⟧•) ≡ lam• (t• ⟦ σ• ⁺• ⟧•)
-    U[]•   : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{σ}{σ• : Sub• Δ• Γ• σ} → transp⟨ Ty• Δ• ⟩ I.U[] (U• [ σ• ]•) ≡ U•
     El[]•  : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{a}{a• : Tm• Γ• U• a}{σ}{σ• : Sub• Δ• Γ• σ} →
              transp⟨ (λ {(C , C• , B) → Ty• (Δ• ▷• C•) B}) ⟩ (I.U[] ,= trans (transp× I.U[]) (U[]• ,×= I.El[]))
              (El• [ σ• ⁺• ]•) ≡ El•
@@ -197,8 +197,8 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     Π[]   : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{σ : Sub Δ Γ} → Π A B [ σ ] ≡ Π (A [ σ ]) (B [ σ ⁺ ])
     β     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B} → app (lam t) ≡ t
     η     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm Γ (Π A B)} → lam (app t) ≡ t
-    lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
     U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
+    lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
     El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (q ⟦ ⟨ u ⟩ ⟧) ≡ u
@@ -209,32 +209,46 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     ρ+    : {Γ Δ : Con}{A : Ty Γ}{σ : Sub Δ Γ}{t : Tm Γ A} → (e : A [ ρ ] [ σ ⁺ ] ≡ A [ σ ] [ ρ ]) →
             transp⟨ Tm (Δ ▷ (A [ σ ])) ⟩ e (t ⟦ ρ ⟧ ⟦ σ ⁺ ⟧) ≡ t ⟦ σ ⟧ ⟦ ρ ⟧
 
-  postulate
-    ⟦_⟧C   : I.Con → Con
-    ⟦_⟧T   : {Γ : I.Con} → I.Ty Γ → Ty ⟦ Γ ⟧C
-    ⟦_⟧S   : {Γ Δ : I.Con} → I.Sub Δ Γ → Sub ⟦ Δ ⟧C ⟦ Γ ⟧C
-    ⟦_⟧t   : {Γ : I.Con}{A : I.Ty Γ} → I.Tm Γ A → Tm ⟦ Γ ⟧C ⟦ A ⟧T
-    
-    ⟦○⟧C   : ⟦ I.○ ⟧C ≡ ○
-    ⟦▷⟧C   : {Γ : I.Con}{A : I.Ty Γ} → ⟦ Γ I.▷ A ⟧C ≡ ⟦ Γ ⟧C ▷ ⟦ A ⟧T
-    {-# REWRITE ⟦○⟧C ⟦▷⟧C #-}
+  DM : DepModel {lc} {ls} {lty} {ltm}
+  DM = record
+    { Con•   = λ _ → Con
+    ; Ty•    = λ Γ _ → Ty Γ
+    ; Sub•   = λ Γ Δ _ → Sub Γ Δ
+    ; Tm•    = λ Γ A _ → Tm Γ A
+    ; ○•     = ○
+    ; _▷•_   = λ Γ A → Γ ▷ A
+    ; U•     = U
+    ; El•    = El
+    ; _[_]•  = λ A σ → A [ σ ]
+    ; Π•     = λ A B → Π A B
+    ; ρ•     = ρ
+    ; ⟨_⟩•    = ⟨_⟩
+    ; _⁺•     = _⁺
+    ; _⟦_⟧•  = λ t σ → t ⟦ σ ⟧
+    ; q•     = q
+    ; lam•   = lam
+    ; app•   = app
+    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → trans ((transpconst {_}{_}{_}{_}{_}{_}{I.Π[]}{_}{Π A• B• [ σ• ]})) Π[]
+    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}}{_}{app (lam t•)})) β
+    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}}{_}{lam (app t•)})) η
+    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} → trans (transpconst {_}{_}{_}{_}{_}{_}{I.U[]}{_}{U [ σ• ]}) U[]
+    -- TODO !
+    ; lam[]• = {!!}
+    ; El[]•  = {!!}
+    ; q⟨⟩•    = {!!}
+    ; q+•    = {!!}
+    ; ρ⟨⟩•    = {!!}
+    ; ρ+•    = {!!}
+    }
+  module DM = DepModel DM
 
-    ⟦U⟧T   : {Γ : I.Con} → ⟦ I.U {Γ} ⟧T ≡ U {⟦ Γ ⟧C}
-    {-# REWRITE ⟦U⟧T #-}
-    ⟦El⟧T  : {Γ : I.Con} → ⟦ I.El {Γ} ⟧T ≡ El
-    ⟦[]⟧T  : {Δ Γ : I.Con}{A : I.Ty Γ}{σ : I.Sub Δ Γ} → ⟦ A I.[ σ ] ⟧T ≡ ⟦ A ⟧T [ ⟦ σ ⟧S ]
-    ⟦Π⟧T   : {Γ : I.Con}{A : I.Ty Γ}{B : I.Ty (Γ I.▷ A)} → ⟦ I.Π A B ⟧T ≡ Π ⟦ A ⟧T ⟦ B ⟧T
-    {-# REWRITE ⟦El⟧T ⟦[]⟧T ⟦Π⟧T #-}
-
-    ⟦ρ⟧S   : {Γ : I.Con}{A : I.Ty Γ} → ⟦ I.ρ {Γ}{A} ⟧S ≡ ρ {⟦ Γ ⟧C}{⟦ A ⟧T}
-    ⟦⟨⟩⟧S   : {Γ : I.Con}{A : I.Ty Γ}{u : I.Tm Γ A} → ⟦ I.⟨ u ⟩ ⟧S ≡ ⟨ ⟦ u ⟧t ⟩
-    ⟦+⟧S   : {Γ Δ : I.Con}{A : I.Ty Γ}{σ : I.Sub Δ Γ} → ⟦ I._⁺ {_}{_}{A} σ ⟧S ≡ ⟦ σ ⟧S ⁺
-    {-# REWRITE ⟦ρ⟧S ⟦⟨⟩⟧S ⟦+⟧S #-}
-
-    ⟦⟦⟧⟧t  : {Γ Δ : I.Con}{A : I.Ty Γ}{t : I.Tm Γ A}{σ : I.Sub Δ Γ} → ⟦ t I.⟦ σ ⟧ ⟧t ≡ ⟦ t ⟧t ⟦ ⟦ σ ⟧S ⟧
-    ⟦q⟧t   : {Γ : I.Con}{A : I.Ty Γ} → ⟦ I.q {Γ}{A} ⟧t ≡ q
-    ⟦lam⟧t : {Γ : I.Con}{A : I.Ty Γ}{B : I.Ty (Γ I.▷ A)}{t : I.Tm (Γ I.▷ A) B} → ⟦ I.lam t ⟧t ≡ lam ⟦ t ⟧t
-    ⟦app⟧t : {Γ : I.Con}{A : I.Ty Γ}{B : I.Ty (Γ I.▷ A)}{t : I.Tm Γ (I.Π A B)} → ⟦ I.app t ⟧t ≡ app ⟦ t ⟧t
-    {-# REWRITE ⟦⟦⟧⟧t ⟦q⟧t ⟦lam⟧t ⟦app⟧t #-}
+  ⟦_⟧C : I.Con → Con
+  ⟦_⟧C = DM.⟦_⟧•C
+  ⟦_⟧T : {Γ : I.Con} → I.Ty Γ → Ty ⟦ Γ ⟧C
+  ⟦_⟧T = DM.⟦_⟧•T
+  ⟦_⟧S : {Γ Δ : I.Con} → I.Sub Δ Γ → Sub ⟦ Δ ⟧C ⟦ Γ ⟧C
+  ⟦_⟧S = DM.⟦_⟧•S
+  ⟦_⟧t : {Γ : I.Con}{A : I.Ty Γ} → I.Tm Γ A → Tm ⟦ Γ ⟧C ⟦ A ⟧T
+  ⟦_⟧t = DM.⟦_⟧•t
 
 \end{code}

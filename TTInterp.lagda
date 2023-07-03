@@ -24,7 +24,7 @@ St = record
   ; _▷_ = λ Γ A → Σ Γ A
   -- Types Are usual types, we don't care about U and El
   ; U = λ _ → 𝟘
-  ; El = λ ()
+  ; El = λ f γ → 𝟘-elim (f γ)
   ; _[_] = λ A σ δ → A (σ δ)
   ; Π = λ A B γ → ((a : A γ) → (B (γ , a)))
   -- Substitutions are functions between contexts
@@ -45,8 +45,8 @@ St = record
   ; El[] = refl
   ; q⟨⟩ = λ {refl → refl}
   ; q+ = λ {refl → refl}
-  ; p⟨⟩ = λ {refl → refl}
-  ; p+ = λ {refl → refl}
+  ; ρ⟨⟩ = λ {refl → refl}
+  ; ρ+ = λ {refl → refl}
   }
 
 \end{code}

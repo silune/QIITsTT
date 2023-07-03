@@ -27,7 +27,11 @@ S = record
   ; _▷•_   = λ _ _ → ★
   
   ; U•     = (λ _ → U) , λ _ → ⟪ sym U[] ⟫
-  ; El•    = (El [_]) , λ σ → ⟪ refl ⟫ -- not sure about this one ? El[] is not concidered
+  ; El•    = λ { (a⟦_⟧* , a⟦_⟧*=) →
+             (λ σ → El a⟦ σ ⟧*) ,
+             λ {Δ} σ → ⟪ (cong⟨ El ⟩ (sym (transpsym (sym U[])))) ■
+                         (cong⟨ (λ x → El (transp⟨ Tm Δ ⟩ U[] x)) ⟩ (unfold a⟦ σ ⟧*=)) ■
+                         (sym El[]) ⟫}
   ; _[_]•  = λ { {_}{_}{_}{_}{A} (A[_]* , A[_]*=) {σ} _ →
              (A[ σ ]* [_]) , λ σ' → ⟪ cong⟨ _[ σ' ] ⟩ (unfold A[ σ ]*=) ⟫ }
   ; Π•     = λ {_}{_}{A} _ {B} _ →
@@ -40,8 +44,8 @@ S = record
   ; _⟦_⟧•  = λ { {Γ}{Δ}{_}{_}{A}{A[_]* , A[_]*=}{t}(t⟦_⟧* , t⟦_⟧*=){σ}_ →
              (t⟦ σ ⟧* ⟦_⟧) ,
              λ {Δ'} σ' → ⟪ (transpcong (Tm Δ') (_[ σ' ]) (unfold A[ σ ]*=) {t⟦ σ ⟧* ⟦ σ' ⟧}) ■
-                                           (sym (transp$ (λ _ → _⟦ σ' ⟧) (unfold A[ σ ]*=))) ■
-                                           (cong⟨ _⟦ σ' ⟧ ⟩ (unfold t⟦ σ ⟧*=)) ⟫}
+                           (sym (transp$ (λ _ → _⟦ σ' ⟧) (unfold A[ σ ]*=))) ■
+                           (cong⟨ _⟦ σ' ⟧ ⟩ (unfold t⟦ σ ⟧*=)) ⟫}
   ; q•     = λ { {_}{_}{A}{A[_]* , A[_]*=} →
              (λ {Δ} σ → transp⟨ Tm Δ ⟩ (sym (cong⟨ _[ σ ] ⟩ (unfold A[ ρ ]*=))) (q ⟦ σ ⟧)) ,
               λ {Δ} σ → ⟪ transpsym {_}{_}{_}{Tm Δ} (sym (cong⟨ _[ σ ] ⟩ (unfold A[ ρ ]*=)))  ⟫} 

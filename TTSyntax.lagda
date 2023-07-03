@@ -32,7 +32,7 @@ module I where
     
     -- Types
     U     : {Γ : Con} → Ty Γ
-    El    : {Γ : Con} → Ty (Γ ▷ U)
+    El    : {Γ : Con} → Tm Γ U → Ty Γ
     _[_]  : {Γ Δ : Con} → Ty Γ → Sub Δ Γ → Ty Δ
     Π     : {Γ : Con}→ (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
     
@@ -54,7 +54,7 @@ module I where
     U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
     -- some requires transport
     lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
-    El[]  : {Γ Δ : Con}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
+    El[]  : {Γ Δ : Con}{σ : Sub Δ Γ}{a : Tm Γ U} → El a [ σ ] ≡ El (transp⟨ Tm Δ ⟩ U[] (a ⟦ σ ⟧))
     -- some even requires additional equalities
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (q ⟦ ⟨ u ⟩ ⟧) ≡ u
@@ -86,7 +86,7 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
     _▷•_   : ∀{Γ} → (Γ• : Con• Γ) → ∀{A} → Ty• Γ• A → Con• (Γ I.▷ A) 
     
     U•     : ∀{Γ}{Γ• : Con• Γ} → Ty• Γ• I.U
-    El•    : ∀{Γ}{Γ• : Con• Γ} → Ty• (Γ• ▷• U•) (I.El)
+    El•    : ∀{Γ}{Γ• : Con• Γ}{a : I.Tm Γ I.U}(a• : Tm• Γ• U• a) → Ty• Γ• (I.El a)
     _[_]•  : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{A} → Ty• Γ• A → ∀{σ} → Sub• Δ• Γ• σ → Ty• Δ• (A I.[ σ ])
     Π•     : ∀{Γ}{Γ• : Con• Γ} → ∀{A} → (A• : Ty• Γ• A) → ∀{B} → (B• : Ty• (Γ• ▷• A•) B) → Ty• Γ• (I.Π A B)
 
@@ -114,8 +114,8 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
              transp⟨ (λ {(C , C• , t) → Tm• Δ• C• t}) ⟩ (I.Π[] ,= trans (transp× I.Π[]) (Π[]• ,×= I.lam[]))
              ((lam• t•) ⟦ σ• ⟧•) ≡ lam• (t• ⟦ σ• ⁺• ⟧•)
     El[]•  : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{a}{a• : Tm• Γ• U• a}{σ}{σ• : Sub• Δ• Γ• σ} →
-             transp⟨ (λ {(C , C• , B) → Ty• (Δ• ▷• C•) B}) ⟩ (I.U[] ,= trans (transp× I.U[]) (U[]• ,×= I.El[]))
-             (El• [ σ• ⁺• ]•) ≡ El•
+             transp⟨ Ty• Δ• ⟩ (I.El[]) (El• a• [ σ• ]•) ≡
+             El• (transp⟨ (λ {(C , C• , t) → Tm• Δ• C• t}) ⟩ (I.U[] ,= trans (transp× I.U[]) (U[]• ,×= transprefl)) (a• ⟦ σ• ⟧•))
     q⟨⟩•    : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• Γ• A}{u}{u• : Tm• Γ• A• u}{e : A I.[ I.ρ ] I.[ I.⟨ u ⟩ ] ≡ A} →
              (e• : transp⟨ Ty• Γ• ⟩ e (A• [ ρ• ]• [ ⟨ u• ⟩• ]•) ≡ A•) →
              transp⟨ (λ {(C , C• , t) → Tm• Γ• C• t}) ⟩ (e ,= trans (transp× e) (e• ,×= (I.q⟨⟩ e))) 
@@ -146,7 +146,7 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
 
     ⟦U⟧•T   : {Γ : I.Con} → ⟦ I.U {Γ} ⟧•T ≡ U•
     {-# REWRITE ⟦U⟧•T #-}
-    ⟦El⟧•T  : {Γ : I.Con} → ⟦ I.El {Γ} ⟧•T ≡ El•
+    ⟦El⟧•T  : {Γ : I.Con}{a : I.Tm Γ I.U} → ⟦ I.El a ⟧•T ≡ El• ⟦ a ⟧•t
     ⟦[]⟧•T  : {Δ Γ : I.Con}{A : I.Ty Γ}{σ : I.Sub Δ Γ} → ⟦ A I.[ σ ] ⟧•T ≡ ⟦ A ⟧•T [ ⟦ σ ⟧•S ]•
     ⟦Π⟧•T   : {Γ : I.Con}{A : I.Ty Γ}{B : I.Ty (Γ I.▷ A)} → ⟦ I.Π A B ⟧•T ≡ Π• ⟦ A ⟧•T ⟦ B ⟧•T
     {-# REWRITE ⟦El⟧•T ⟦[]⟧•T ⟦Π⟧•T #-}
@@ -181,7 +181,7 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     _▷_   : (Γ : Con) → Ty Γ → Con
     
     U     : {Γ : Con} → Ty Γ
-    El    : {Γ : Con} → Ty (Γ ▷ U)
+    El    : {Γ : Con} → Tm Γ U → Ty Γ
     _[_]  : {Γ Δ : Con} → Ty Γ → Sub Δ Γ → Ty Δ
     Π     : {Γ : Con}→ (A : Ty Γ) → (B : Ty (Γ ▷ A)) → Ty Γ
     
@@ -199,7 +199,7 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     η     : {Γ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm Γ (Π A B)} → lam (app t) ≡ t
     U[]   : {Γ Δ : Con}{σ : Sub Δ Γ} → U [ σ ] ≡ U
     lam[] : {Γ Δ : Con}{A : Ty Γ}{B : Ty (Γ ▷ A)}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → transp⟨ Tm Δ ⟩ Π[] ((lam t) ⟦ σ ⟧) ≡ lam (t ⟦ σ ⁺ ⟧)
-    El[]  : {Γ Δ : Con}{a : Tm Γ U}{σ : Sub Δ Γ} → transp⟨ (λ A → Ty (Δ ▷ A)) ⟩ U[] (El [ σ ⁺ ]) ≡ El
+    El[]  : {Γ Δ : Con}{σ : Sub Δ Γ}{a : Tm Γ U} → El a [ σ ] ≡ El (transp⟨ Tm Δ ⟩ U[] (a ⟦ σ ⟧))
     q⟨⟩    : {Γ : Con}{A : Ty Γ}{u : Tm Γ A} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (q ⟦ ⟨ u ⟩ ⟧) ≡ u
     q+    : {Γ Δ : Con}{A : Ty Γ}{σ : Sub Δ Γ} → (e : A [ ρ ] [ σ ⁺ ] ≡ A [ σ ] [ ρ ]) →

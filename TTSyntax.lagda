@@ -1,7 +1,7 @@
 
 \begin{code}
 
-{-# OPTIONS --prop --rewriting #-}
+{-# OPTIONS --prop --rewriting --allow-unsolved-metas #-}
 
 open Agda.Primitive
 open import Equality
@@ -228,10 +228,10 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     ; q•     = q
     ; lam•   = lam
     ; app•   = app
-    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → trans ((transpconst {_}{_}{_}{_}{_}{_}{I.Π[]}{_}{Π A• B• [ σ• ]})) Π[]
-    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}}{_}{app (lam t•)})) β
-    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}}{_}{lam (app t•)})) η
-    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} → trans (transpconst {_}{_}{_}{_}{_}{_}{I.U[]}{_}{U [ σ• ]}) U[]
+    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → trans ((transpconst {_}{_}{_}{_}{_}{_}{I.Π[]})) Π[]
+    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}})) β
+    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}})) η
+    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} → trans (transpconst {_}{_}{_}{_}{_}{_}{I.U[]}) U[]
     -- TODO !
     ; lam[]• = {!!}
     ; El[]•  = {!!}

@@ -12,6 +12,7 @@ module Equality where
   infixr 4 _≡_
   infixr 4 _,=_
   infixr 2 _≡⟨_⟩_
+  infixr 2 _■_
   infixr 5 _∘_
 
   id : ∀{l}{A : Set l} → A → A
@@ -39,11 +40,14 @@ module Equality where
     
   -- Properities
 
-  symetry : ∀{l}{A : Set l}{x y : A} → x ≡ y → y ≡ x
-  symetry refl = refl
+  sym : ∀{l}{A : Set l}{x y : A} → x ≡ y → y ≡ x
+  sym refl = refl
 
   trans : ∀{l}{A : Set l}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
   trans refl refl = refl
+
+  _■_ : ∀{l}{A : Set l}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
+  _■_ = trans
 
   _≡⟨_⟩_ : ∀{l}{A : Set l}{y z : A} → (x : A) → x ≡ y → y ≡ z → x ≡ z
   x ≡⟨ eqy ⟩ eqz = trans eqy eqz
@@ -74,8 +78,20 @@ module Equality where
   transp× refl = refl
 
   -- (lemma 2.3.5 HoTT)
-  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y}{p p' : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
+  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y}{p : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
   transpconst {eq = refl} = refl
+
+  transp$ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}(f : (a : A) → B a → C a){a a' : A}(e : a ≡ a'){b : B a} →
+            f a' (transp⟨ B ⟩ e b) ≡ transp⟨ C ⟩ e (f a b)
+  transp$ _ refl = refl
+
+  transpcong : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}(C : B → Set l'')(f : A → B){a a' : A}(e : a ≡ a'){c : C (f a)} →
+               transp⟨_⟩ {A = B} C {f a} {f a'} (cong⟨ f ⟩ e) c ≡ transp⟨_⟩ {A = A} (λ x → C (f x)) {a} {a'} e c
+  transpcong _ _ refl = refl
+
+  transpsym : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' : A}(e : a ≡ a'){x : P a} →
+              transp⟨ P ⟩ (sym e) (transp⟨ P ⟩ e x) ≡ x
+  transpsym refl = refl
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 

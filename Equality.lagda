@@ -55,6 +55,12 @@ module Equality where
   -- (lemma 2.2.1 HoTT)
   cong⟨_⟩ : ∀{l}{A : Set l}{l'}{B : Set l'}(f : A → B){x y : A} → x ≡ y → f x ≡ f y
   cong⟨ f ⟩ refl = refl
+
+  cong$ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : (a : A) → B a} → f ≡ g → (x : A) → f x ≡ g x
+  cong$ refl x = refl
+
+  cong$i : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : {a : A} → B a} → (λ {x} → f {x}) ≡ g → (x : A) → f {x} ≡ g {x}
+  cong$i refl x = refl
   
   -- (lemma 2.3.2 HoTT) (need to be postulate when working with Prop instead of Set ?)
   postulate transp⟨_⟩ : ∀{l}{A : Set l}{l'}(P : A → Set l'){x y : A} → x ≡ y → P x → P y
@@ -73,7 +79,15 @@ module Equality where
                      (x , y) ≡ (x' , y')
   refl ,×= refl = refl
 
-  transp× : ∀{l}{l'}{l''}{A : Set l}{B : A → Set l'}{C : A → Set l''}{a a' : A}{x : B a × C a} → (e : a ≡ a') →
+  transpΣ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
+            transp⟨ (λ a → Σ B (C a)) ⟩ e w ≡ (pr₁ w , transp⟨ (λ a → C a (pr₁ w)) ⟩ e (pr₂ w))
+  transpΣ refl = refl
+
+  transpπ₁ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
+             pr₁ (transp⟨ (λ a → Σ B (C a)) ⟩ e w) ≡ pr₁ w
+  transpπ₁ refl = refl
+
+  transp× : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}{a a' : A}{x : B a × C a} → (e : a ≡ a') →
             transp⟨ (λ a → B a × C a) ⟩ e x ≡ (transp⟨ B ⟩ e (pr₁ x)) , (transp⟨ C ⟩ e (pr₂ x))
   transp× refl = refl
 
@@ -85,20 +99,23 @@ module Equality where
             f a' (transp⟨ B ⟩ e b) ≡ transp⟨ C ⟩ e (f a b)
   transp$ _ refl = refl
 
+  transp→ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}(C : A → Set l''){a a' : A}(e : a ≡ a'){f : B a → C a} → 
+            transp⟨ (λ a → B a → C a) ⟩ e f ≡ λ b' → transp⟨ C ⟩ e (f (transp⟨ B ⟩ (sym e) b'))
+  transp→ C refl = refl
+
   transpcong : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}(C : B → Set l'')(f : A → B){a a' : A}(e : a ≡ a'){c : C (f a)} →
                transp⟨_⟩ {A = B} C {f a} {f a'} (cong⟨ f ⟩ e) c ≡ transp⟨_⟩ {A = A} (λ x → C (f x)) {a} {a'} e c
   transpcong _ _ refl = refl
 
-  transpsym : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' : A}(e : a ≡ a'){x : P a} →
-              transp⟨ P ⟩ (sym e) (transp⟨ P ⟩ e x) ≡ x
-  transpsym refl = refl
+  transptransp : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' a'' : A}(e : a ≡ a'){e' : a' ≡ a''}{x : P a} →
+              transp⟨ P ⟩ e' (transp⟨ P ⟩ e x) ≡ transp⟨ P ⟩ (e ■ e') x
+  transptransp refl {refl} = refl
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 
-  postulate funext  : ∀{l}{A : Set l}{l'}{B : Set l'}{f g : A → B} → ((x : A) → f x ≡ g x) → f ≡ g
-  funexti : ∀{l}{A : Set l}{l'}{B : Set l'}{f g : A → B} → ({x : A} → f x ≡ g x) → f ≡ g
-  funexti p = funext (λ a → p {x = a})
-
+  postulate funext  : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : (a : A) → B a} → ((x : A) → f x ≡ g x) → f ≡ g
+  postulate funexti : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : {a : A} → B a} → ((x : A) → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ g
+  
   _∘_ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : Set l''} → (f : B → C) → (g : A → B) → (A → C)
   f ∘ g = λ x → f (g x)
 

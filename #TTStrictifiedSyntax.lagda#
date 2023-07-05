@@ -56,7 +56,7 @@ S = record
               (λ {Δ} σ → ⟪ transptransp {_}{_}{_}{Tm Δ} (sym (cong⟨ _[ σ ] ⟩ (unfold A[ ρ ]*=)))  ⟫)}
   ; lam•   = λ { {Γ}{_}{A}{A[_]* , A[_]*=}{_}{_}{t}(t⟦_⟧* , t⟦_⟧*=) →
               (λ {Δ} σ → lam (t⟦ transp⟨ (λ C → Sub (Δ ▷ C) (Γ ▷ A)) ⟩ (sym (unfold A[ σ ]*=)) (σ ⁺) ⟧*)) ,
-              (λ {Δ} σ → ⟪ ? ⟫) }
+              (λ {Δ} σ → ⟪ {!!} ⟫) }
   -- app should be replaced with _$_
   ; app•   = λ { {Γ}{Γ•}{A}{A•}{B}{B[_]* , B[_]*=}{u}(u⟦_⟧* , u⟦_⟧*=) →
               (λ {Δ} σ → transp⟨ Tm Δ ⟩ (sym (unfold B[ σ ]*=)) ((app u) ⟦ σ ⟧)) ,

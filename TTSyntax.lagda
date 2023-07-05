@@ -115,7 +115,7 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
              ((lam• t•) ⟦ σ• ⟧•) ≡ lam• (t• ⟦ σ• ⁺• ⟧•)
     El[]•  : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{a}{a• : Tm• Γ• U• a}{σ}{σ• : Sub• Δ• Γ• σ} →
              transp⟨ Ty• Δ• ⟩ (I.El[]) (El• a• [ σ• ]•) ≡
-             El• (transp⟨ (λ {(C , C• , t) → Tm• Δ• C• t}) ⟩ (I.U[] ,= trans (transp× I.U[]) (U[]• ,×= transprefl)) (a• ⟦ σ• ⟧•))
+             El• (transp⟨ (λ {(C , C• , t) → Tm• Δ• C• t}) ⟩ (I.U[] ,= trans (transp× I.U[]) (U[]• ,×= refl)) (a• ⟦ σ• ⟧•))
     q⟨⟩•    : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• Γ• A}{u}{u• : Tm• Γ• A• u}{e : A I.[ I.ρ ] I.[ I.⟨ u ⟩ ] ≡ A} →
              (e• : transp⟨ Ty• Γ• ⟩ e (A• [ ρ• ]• [ ⟨ u• ⟩• ]•) ≡ A•) →
              transp⟨ (λ {(C , C• , t) → Tm• Γ• C• t}) ⟩ (e ,= trans (transp× e) (e• ,×= (I.q⟨⟩ e))) 
@@ -228,12 +228,13 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     ; q•     = q
     ; lam•   = lam
     ; app•   = app
-    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → trans ((transpconst {_}{_}{_}{_}{_}{_}{I.Π[]})) Π[]
-    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}})) β
-    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → trans ((transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}})) η
-    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} → trans (transpconst {_}{_}{_}{_}{_}{_}{I.U[]}) U[]
+    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → (transpconst {_}{_}{_}{_}{_}{_}{I.Π[]})         ■ Π[]
+    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} →         (transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}}) ■ β
+    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} →         (transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}}) ■ η
+    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} →               (transpconst {_}{_}{_}{_}{_}{_}{I.U[]})         ■ U[]
     -- TODO !
-    ; lam[]• = {!!}
+    ; lam[]• = λ {Γ}{Δ}{Γ•}{Δ•}{A}{A•}{B}{B•}{t}{t•}{σ}{σ•} →
+               cong⟨ (λ {(P , e) → transp⟨ P ⟩ e (lam t• ⟦ σ• ⟧)}) ⟩ {!funext (λ x → ?)!} ■ lam[]
     ; El[]•  = {!!}
     ; q⟨⟩•    = {!!}
     ; q+•    = {!!}

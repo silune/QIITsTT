@@ -1,7 +1,7 @@
 
 \begin{code}
 
-{-# OPTIONS --prop --rewriting --allow-unsolved-metas #-}
+{-# OPTIONS --prop --rewriting #-}
 
 open Agda.Primitive
 open import Equality
@@ -206,8 +206,8 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
             transp⟨ Tm (Δ ▷ (A [ σ ])) ⟩ e (q ⟦ σ ⁺ ⟧) ≡ q
     ρ⟨⟩    : {Γ : Con}{A B : Ty Γ}{t : Tm Γ A}{u : Tm Γ B} → (e : A [ ρ ] [ ⟨ u ⟩ ] ≡ A) →
             transp⟨ Tm Γ ⟩ e (t ⟦ ρ ⟧ ⟦ ⟨ u ⟩ ⟧) ≡ t
-    ρ+    : {Γ Δ : Con}{A : Ty Γ}{σ : Sub Δ Γ}{t : Tm Γ A} → (e : A [ ρ ] [ σ ⁺ ] ≡ A [ σ ] [ ρ ]) →
-            transp⟨ Tm (Δ ▷ (A [ σ ])) ⟩ e (t ⟦ ρ ⟧ ⟦ σ ⁺ ⟧) ≡ t ⟦ σ ⟧ ⟦ ρ ⟧
+    ρ+    : {Γ Δ : Con}{A B : Ty Γ}{σ : Sub Δ Γ}{t : Tm Γ A} → (e : A [ ρ ] [ σ ⁺ ] ≡ A [ σ ] [ ρ ]) →
+            transp⟨ Tm (Δ ▷ (B [ σ ])) ⟩ e (t ⟦ ρ ⟧ ⟦ σ ⁺ ⟧) ≡ t ⟦ σ ⟧ ⟦ ρ ⟧
 
   DM : DepModel {lc} {ls} {lty} {ltm}
   DM = record
@@ -228,18 +228,35 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     ; q•     = q
     ; lam•   = lam
     ; app•   = app
-    ; Π[]•   = λ {_}{_}{_}{_}{_}{A•}{_}{B•}{_}{σ•} → (transpconst {_}{_}{_}{_}{_}{_}{I.Π[]})         ■ Π[]
-    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} →         (transpconst {_}{_}{_}{_}{_}{t}{I.β {Γ}{A}{B}}) ■ β
-    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} →         (transpconst {_}{_}{_}{_}{_}{t}{I.η {Γ}{A}{B}}) ■ η
-    ; U[]•   = λ {_}{_}{_}{_}{_}{σ•} →               (transpconst {_}{_}{_}{_}{_}{_}{I.U[]})         ■ U[]
-    -- TODO !
+    ; Π[]•   =                               (transpconst I.Π[])           ■ Π[]
+    ; β•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → (transpconst {_}{_}{_}{_}{_}{t} (I.β {Γ}{A}{B})) ■ β
+    ; η•     = λ {Γ}{_}{A}{_}{B}{_}{t}{t•} → (transpconst {_}{_}{_}{_}{_}{t} (I.η {Γ}{A}{B})) ■ η
+    ; U[]•   =                               (transpconst I.U[])           ■ U[]
     ; lam[]• = λ {Γ}{Δ}{Γ•}{Δ•}{A}{A•}{B}{B•}{t}{t•}{σ}{σ•} →
-               cong⟨ (λ {(P , e) → transp⟨ P ⟩ e (lam t• ⟦ σ• ⟧)}) ⟩ {!funext (λ x → ?)!} ■ lam[]
-    ; El[]•  = {!!}
-    ; q⟨⟩•    = {!!}
-    ; q+•    = {!!}
-    ; ρ⟨⟩•    = {!!}
-    ; ρ+•    = {!!}
+               (sym (transpcong (Tm Δ•)(λ x → pr₁ (pr₂ x))
+                                (I.Π[] ,= trans (transp× I.Π[]) ((transpconst I.Π[] ■ Π[]) ,×= I.lam[])))) ■ 
+               lam[]  
+    ; El[]•  = λ {Γ}{Δ}{Γ•}{Δ•}{a}{a•}{σ}{σ•} →
+               (transpconst I.El[]) ■
+               (El[]) ■
+               (cong⟨ El ⟩ (transpcong (Tm Δ•)(λ x → pr₁ (pr₂ x))
+                                      (I.U[] ,= trans (transp× I.U[]) (((transpconst I.U[]) ■ U[]) ,×= refl))))
+    ; q⟨⟩•    = λ {Γ}{Γ•}{A}{A•}{u}{u•}{e} e• →
+               (sym (transpcong (Tm Γ•)(λ x → pr₁ (pr₂ x))
+                                 (e ,= trans (transp× e) (e• ,×= (I.q⟨⟩ e))))) ■
+               q⟨⟩ ((sym (transpconst e)) ■ e•)
+    ; q+•    = λ {Γ}{Δ}{Γ•}{Δ•}{A}{A•}{σ}{σ•}{e} e• →
+               (sym (transpcong (Tm (Δ• ▷ A• [ σ• ]))(λ x → pr₁ (pr₂ x))
+                                 (e ,= trans (transp× e) (e• ,×= (I.q+ e))))) ■
+               q+ ((sym (transpconst e)) ■ e•)
+    ; ρ⟨⟩•    = λ {Γ}{Γ•}{A}{B}{A•}{B•}{t}{t•}{u}{u•}{e} e• →
+               (sym (transpcong (Tm Γ•)(λ x → pr₁ (pr₂ x))
+                                 (e ,= trans (transp× e) (e• ,×= (I.ρ⟨⟩ e))))) ■
+               ρ⟨⟩ ((sym (transpconst e)) ■ e•)
+    ; ρ+•    = λ {Γ}{Δ}{Γ•}{Δ•}{A}{B}{A•}{B•}{σ}{σ•}{t}{t•}{e} e• →
+               (sym (transpcong (Tm (Δ• ▷ B• [ σ• ]))(λ x → pr₁ (pr₂ x))
+                                 (e ,= trans (transp× e) (e• ,×= (I.ρ+ e))))) ■
+               ρ+ (sym (transpconst e) ■ e•)
     }
   module DM = DepModel DM
 

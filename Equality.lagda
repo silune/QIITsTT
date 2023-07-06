@@ -92,8 +92,8 @@ module Equality where
   transp× refl = refl
 
   -- (lemma 2.3.5 HoTT)
-  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}{eq : x ≡ y}{p : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
-  transpconst {eq = refl} = refl
+  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}(eq : x ≡ y){p : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
+  transpconst refl = refl
 
   transp$ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}(f : (a : A) → B a → C a){a a' : A}(e : a ≡ a'){b : B a} →
             f a' (transp⟨ B ⟩ e b) ≡ transp⟨ C ⟩ e (f a b)

@@ -79,6 +79,9 @@ module Equality where
                      (x , y) ≡ (x' , y')
   refl ,×= refl = refl
 
+  congdep⟨_⟩ : ∀{l}{A : Set l}{l'}{B : A → Set l'}(f : (a : A) → B a){x y : A} → (e : x ≡ y) → transp⟨ B ⟩ e (f x) ≡ f y
+  congdep⟨ f ⟩ refl = refl
+
   transpΣ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
             transp⟨ (λ a → Σ B (C a)) ⟩ e w ≡ (pr₁ w , transp⟨ (λ a → C a (pr₁ w)) ⟩ e (pr₂ w))
   transpΣ refl = refl
@@ -108,8 +111,12 @@ module Equality where
   transpcong _ _ refl = refl
 
   transptransp : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' a'' : A}(e : a ≡ a'){e' : a' ≡ a''}{x : P a} →
-              transp⟨ P ⟩ e' (transp⟨ P ⟩ e x) ≡ transp⟨ P ⟩ (e ■ e') x
+                 transp⟨ P ⟩ e' (transp⟨ P ⟩ e x) ≡ transp⟨ P ⟩ (e ■ e') x
   transptransp refl {refl} = refl
+
+  transpeq : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' b : A}(e : a ≡ b)(e' : a' ≡ b){x : P a}{y : P a'} → transp⟨ P ⟩ (e ■ (sym e')) x ≡ y →
+             transp⟨ P ⟩ e x ≡ transp⟨ P ⟩ e' y
+  transpeq refl refl refl = refl
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 

@@ -89,7 +89,7 @@ S = record
               (λ {Δ} σ → ⟪ transptransp {_}{_}{_}{Tm Δ} (sym (unfold B[ σ ]*=)) ⟫)}
              
   ; Π[]•   = λ { {Γ}{Δ}{_}{_}{A}{A[_]* , A[_]*=}{B}{B[_]* , B[_]*=}{σ} →
-             funexti (λ Δ' → funext λ σ' →
+             funexti (λ Δ' → funext (λ σ' →
              let transpσ⁺ =  transp⟨ (λ C → Sub (Δ ▷ C) (Γ ▷ A)) ⟩ (sym (unfold A[ σ ]*=)) (σ ⁺) in
              let transpσ'⁺ =  transp⟨ (λ C → Sub (Δ' ▷ C) (Δ ▷ A [ σ ])) ⟩ (cong⟨ _[ σ' ] ⟩ (sym (unfold A[ σ ]*=))) (σ' ⁺) in
               (cong$ (cong$i (transpπ₁ I.Π[]) Δ') σ') ■ 
@@ -99,17 +99,37 @@ S = record
                 ((transp$ {_}{_}{_}{λ C → Sub (Δ ▷ C) (Γ ▷ A)} (λ C σ'' → B [ σ'' ] [ σ' ⁺ ]) (sym (unfold A[ σ ]*=)) { σ ⁺ }) ■
                  (sym (transp$ (λ C σ'' → B [ σ ⁺ ] [ σ'' ]) (sym (unfold A[ σ ]*=)) { σ' ⁺ })) ■
                  (cong⟨ B [ σ ⁺ ] [_] ⟩ (sym (transpcong (λ C → Sub (Δ' ▷ C) (Δ ▷ A [ σ ])) (_[ σ' ]) (sym (unfold A[ σ ]*=))))) ■
-                 cong⟨ (λ D → D [ transpσ'⁺ ]) ⟩ (sym (unfold B[ σ ⁺ ]*=)))))
+                 cong⟨ (λ D → D [ transpσ'⁺ ]) ⟩ (sym (unfold B[ σ ⁺ ]*=))))))
               ,= refl}
-  ; β•     = {!!}
-  ; η•     = {!!}
-  ; U[]•   = {!!}
-  ; lam[]• = {!!}
-  ; El[]•  = {!!}
-  ; q⟨⟩•    = {!!}
-  ; q+•    = {!!}
-  ; ρ⟨⟩•    = {!!}
-  ; ρ+•    = {!!}
+  ; β•     = λ { {Γ}{Γ•}{A}{A[_]* , A[_]*=}{B}{B[_]* , B[_]*=}{t}{t⟦_⟧* , t⟦_⟧*=} →
+              funexti (λ Δ → funext (λ σ →
+                (cong$ (cong$i {_}{_}{_}{_}{_}{λ {Δ'} → (λ σ' → transp⟨ Tm Δ' ⟩ (sym (unfold B[ σ' ]*=)) (app (lam t) ⟦ σ' ⟧))}
+                (transpπ₁ {_}{_}{_}{_}{_}
+                          {λ u u⟦_⟧* → (∀{Δ'} σ' → Lift (transp⟨ Tm Δ' ⟩ (unfold B[ σ' ]*=) (u⟦ σ' ⟧*) ≡ u ⟦ σ' ⟧))}
+                          {_}{t} I.β) Δ) σ) ■
+                (cong⟨ (λ x → transp⟨ Tm Δ ⟩ (sym (unfold B[ σ ]*=)) (x ⟦ σ ⟧)) ⟩ (I.β)) ■
+                (cong⟨ transp⟨ Tm Δ ⟩ (sym (unfold B[ σ ]*=)) ⟩ (sym (unfold t⟦ σ ⟧*=))) ■
+                (transptransp (unfold B[ σ ]*=){sym (unfold B[ σ ]*=)})))
+              ,= refl}
+  ; η•     = λ { {Γ}{Γ•}{A}{A[_]* , A[_]*=}{B}{B[_]* , B[_]*=}{t}{t⟦_⟧* , t⟦_⟧*=} →
+             funexti (λ Δ → funext (λ σ →
+             {!!})) ,= refl}
+  ; U[]•   = λ {Γ}{Δ}{Γ•}{Δ•}{σ}{σ•} →
+             funexti (λ Δ' → funext (λ σ' →
+              (cong$ (cong$i (transpπ₁ I.U[]) Δ') σ') ■ I.U[]))
+             ,= refl
+  ; lam[]• = λ { {Γ}{Δ}{Γ•}{Δ•}{A}{A[_]* , A[_]*=}{B}{B[_]* , B[_]*=}{t}{t⟦_⟧* , t⟦_⟧*=}{σ}{σ•} →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl}
+  ; El[]•  = λ { {Γ}{Δ}{Γ•}{Δ•}{a}{a⟦_⟧* , a⟦_⟧*=}{σ}{σ•} →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl}
+  ; q⟨⟩•    = λ { {Γ}{Γ•}{A}{A[_]* , A[_]*=}{u}{u⟦_⟧* , u⟦_⟧*=}{e} e• →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl}
+  ; q+•    = λ { {Γ}{Δ}{Γ•}{Δ•}{A}{A[_]* , A[_]*=}{σ}{σ•}{e} e• →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl} 
+  ; ρ⟨⟩•    = λ { {Γ}{Γ•}{A}{B}{A[_]* , A[_]*=}{B[_]* , B[_]*=}{t}{t⟦_⟧* , t⟦_⟧*=}{u}{u⟦_⟧* , u⟦_⟧*=}{e} e• →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl}
+  ; ρ+•    = λ { {Γ}{Δ}{Γ•}{Δ•}{A}{B}{A[_]* , A[_]*=}{B[_]* , B[_]*=}{σ}{σ•}{t}{t⟦_⟧* , t⟦_⟧*=}{e} e• →
+             funexti (λ Δ' → funext (λ σ' → {!!})) ,= refl}
   } where open I
 module S = DepModel S
 
@@ -138,7 +158,7 @@ I* = record
   ; β     = I.β
   ; η     = I.η
   ; U[]   = refl
-  ; lam[] = {!!}
+  ; lam[] = refl
   ; El[]  = refl
   ; q⟨⟩    = {!!}
   ; q+    = {!!}

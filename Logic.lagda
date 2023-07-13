@@ -16,7 +16,7 @@ module Logic where
 
   -- Unit type Set
   data 𝟙 {l} : Set l where
-    ★ : 𝟙 
+    ★ : 𝟙
 
   -- Empty type Prop
   data ⊥ : Prop where
@@ -53,8 +53,8 @@ module Logic where
   record Σ {l}{l'} (A : Set l) (B : A → Set l') : Set (l ⊔ l') where
     constructor _,_
     field
-      pr₁ : A
-      pr₂ : B pr₁
+      π₁ : A
+      π₂ : B π₁
   open Σ public
 
   _×_ : ∀{l}{l'} (A : Set l) (B : Set l') → Set (l ⊔ l')

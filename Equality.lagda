@@ -13,10 +13,6 @@ module Equality where
   infixr 4 _,=_
   infixr 2 _≡⟨_⟩_
   infixr 2 _■_
-  infixr 5 _∘_
-
-  id : ∀{l}{A : Set l} → A → A
-  id = λ x → x
 
   -- Equality
 
@@ -37,7 +33,10 @@ module Equality where
   single x = one x refl
     
   open Single public
-    
+
+  ★-uniqueness : ∀{l} → (a : 𝟙 {l}) → (b : 𝟙 {l}) → a ≡ b
+  ★-uniqueness ★ ★ = refl
+  
   -- Properities
 
   sym : ∀{l}{A : Set l}{x y : A} → x ≡ y → y ≡ x
@@ -84,15 +83,15 @@ module Equality where
   congdep⟨ f ⟩ refl = refl
 
   transpΣ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
-            transp⟨ (λ a → Σ B (C a)) ⟩ e w ≡ (pr₁ w , transp⟨ (λ a → C a (pr₁ w)) ⟩ e (pr₂ w))
+            transp⟨ (λ a → Σ B (C a)) ⟩ e w ≡ (π₁ w , transp⟨ (λ a → C a (π₁ w)) ⟩ e (π₂ w))
   transpΣ refl = refl
 
   transpπ₁ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
-             pr₁ (transp⟨_⟩ {l}{A}{l' ⊔ l''} (λ a → Σ B (C a)) {a} {a'} e w) ≡ pr₁ w
+             π₁ (transp⟨_⟩ {l}{A}{l' ⊔ l''} (λ a → Σ B (C a)) {a} {a'} e w) ≡ π₁ w
   transpπ₁ refl = refl
 
   transp× : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}{a a' : A}{x : B a × C a} → (e : a ≡ a') →
-            transp⟨ (λ a → B a × C a) ⟩ e x ≡ (transp⟨ B ⟩ e (pr₁ x)) , (transp⟨ C ⟩ e (pr₂ x))
+            transp⟨ (λ a → B a × C a) ⟩ e x ≡ (transp⟨ B ⟩ e (π₁ x)) , (transp⟨ C ⟩ e (π₂ x))
   transp× refl = refl
 
   transp$ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}(f : (a : A) → B a → C a){a a' : A}(e : a ≡ a'){b : B a} →
@@ -115,8 +114,5 @@ module Equality where
 
   postulate funext  : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : (a : A) → B a} → ((x : A) → f x ≡ g x) → f ≡ g
   postulate funexti : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : {a : A} → B a} → ((x : A) → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ g
-  
-  _∘_ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : Set l''} → (f : B → C) → (g : A → B) → (A → C)
-  f ∘ g = λ x → f (g x)
 
 \end{code}

@@ -17,6 +17,8 @@ module I where
   infixr 6 _[_]
   infixr 7 _$_
   infixr 5 _▷_
+  infixr 6 _∘_
+  infixr 5 _‣_
 
   -- we have 4 sorts, we have to postulate Sub and Tm for the equations
   
@@ -34,9 +36,11 @@ module I where
   postulate
     
     -- Substitutions
+    _∘_   : {Γ Δ Θ : Con} → Sub Δ Γ → Sub Θ Δ → Sub Θ Γ
+    id    : {Γ : Con} → Sub Γ Γ
+    ε     : {Γ : Con} → Sub Γ ○
+    _‣_   : {Γ Δ : Con}{A : Ty} → Sub Δ Γ → Tm Δ A → Sub Δ (Γ ▷ A)
     p     : {Γ : Con}{A : Ty} → Sub (Γ ▷ A) Γ
-    ⟨_⟩    : {Γ : Con}{A : Ty} → Tm Γ A → Sub Γ (Γ ▷ A)
-    _⁺    : {Γ Δ : Con}{A : Ty} → (σ : Sub Δ Γ) → Sub (Δ ▷ A) (Γ ▷ A)
     
     -- Terms
     _[_]  : {Γ Δ : Con}{A : Ty} → Tm Γ A → (σ : Sub Δ Γ) → Tm Δ A
@@ -44,15 +48,22 @@ module I where
     lam   : {Γ : Con}{A B : Ty} → Tm (Γ ▷ A) B → Tm Γ (A ⇒ B)
     _$_   : {Γ : Con}{A B : Ty} → Tm Γ (A ⇒ B) → Tm Γ A → Tm Γ B
 
-    -- then the equations
-    β     : {Γ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{u : Tm Γ A} → (lam t) $ u ≡ t [ ⟨ u ⟩ ]
+    -- the equations on terms :
+    β     : {Γ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{u : Tm Γ A} → (lam t) $ u ≡ t [ id ‣ u ]
     η     : {Γ : Con}{A B : Ty}{t : Tm Γ (A ⇒ B)} → lam ((t [ p ]) $ q) ≡ t
-    lam[] : {Γ Δ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → (lam t) [ σ ] ≡ lam (t [ σ ⁺ ])
+    -- the eqautions on how to compute substitutions 
+    [][]  : {Γ Δ Θ : Con}{A : Ty}{t : Tm Γ A}{σ : Sub Δ Γ}{ρ : Sub Θ Δ} → t [ σ ] [ ρ ] ≡ t [ σ ∘ ρ ]
+    q[]   : {Γ Δ : Con}{A : Ty}{t : Tm Δ A}{σ : Sub Δ Γ} → q [ σ ‣ t ] ≡ t
+    lam[] : {Γ Δ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → (lam t) [ σ ] ≡ lam (t [ σ ∘ p ‣ q ])
     $[]   : {Γ Δ : Con}{A B : Ty}{t : Tm Γ (A ⇒ B)}{u : Tm Γ A}{σ : Sub Δ Γ} → (t $ u) [ σ ] ≡ (t [ σ ]) $ (u [ σ ])
-    q⟨⟩    : {Γ : Con}{A : Ty}{u : Tm Γ A} → q [ ⟨ u ⟩ ] ≡ u
-    q+    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ Γ} → q [ σ ⁺ ] ≡ q {_}{A}
-    p⟨⟩    : {Γ : Con}{A B : Ty}{t : Tm Γ A}{u : Tm Γ B} → (t [ p ] [ ⟨ u ⟩ ]) ≡ t
-    p+    : {Γ Δ : Con}{A B : Ty}{σ : Sub Δ Γ}{t : Tm Γ A} → (t [ p {_}{B} ] [ σ ⁺ ]) ≡ t [ σ ] [ p ]
+    t[id] : {Γ : Con}{A : Ty}{t : Tm Γ A} → t [ id ] ≡ t
+    -- the equations on substitutions
+    ass   : {Γ Δ Θ Ω : Con}{σ : Sub Δ Γ}{ρ : Sub Θ Δ}{γ : Sub Ω Θ} → (σ ∘ ρ) ∘ γ ≡ σ ∘ (ρ ∘ γ)
+    idl   : {Γ Δ : Con}{σ : Sub Δ Γ} → id ∘ σ ≡ σ
+    idr   : {Γ Δ : Con}{σ : Sub Δ Γ} → σ ∘ id ≡ σ
+    ○η    : {Γ : Con}{σ : Sub Γ ○} → σ ≡ ε
+    ▷β    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ Γ}{t : Tm Δ A} → p ∘ (σ ‣ t) ≡ σ
+    ▷η    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ (Γ ▷ A)} → (p ∘ σ ‣ q [ σ ]) ≡ σ
     
 --------------------------------------------------
 
@@ -63,20 +74,26 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
   infixr 6 _[_]•
   infixr 7 _$•_
   infixr 5 _▷•_
+  infixr 6 _∘•_
+  infixr 5 _‣•_
+
+  open I
 
   field
   
-    Con•   : I.Con → Set lc
-    Ty•    : I.Ty → Set lty
-    Sub•   : ∀{Γ Δ} → Con• Δ → Con• Γ → I.Sub Δ Γ → Set ls
-    Tm•    : ∀{Γ} → (Γ• : Con• Γ) → ∀{A} → Ty• A → I.Tm Γ A → Set ltm
+    Con•   : Con → Set lc
+    Ty•    : Ty → Set lty
+    Sub•   : ∀{Δ} → Con• Δ → ∀{Γ} → Con• Γ → Sub Δ Γ → Set ls
+    Tm•    : ∀{Γ} → (Γ• : Con• Γ) → ∀{A} → Ty• A → Tm Γ A → Set ltm
     
-    ○•     : Con• I.○
-    _▷•_   : ∀{Γ} → (Γ• : Con• Γ) → ∀{A} → Ty• A → Con• (Γ I.▷ A) 
-  
-    p•     : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A} → Sub• (Γ• ▷• A•) Γ• I.p
-    ⟨_⟩•    : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A} → ∀{u} → Tm• Γ• A• u → Sub• Γ• (Γ• ▷• A•) I.⟨ u ⟩
-    _⁺•    : ∀{Γ Δ}{Γ• : Con• Γ}{Δ• : Con• Δ}{A}{A• : Ty• A}{σ} → (σ• : Sub• Δ• Γ• σ) → Sub• (Δ• ▷• A•)  (Γ• ▷• A•) (σ I.⁺)
+    ○•     : Con• ○
+    _▷•_   : ∀{Γ} → (Γ• : Con• Γ) → ∀{A} → Ty• A → Con• (Γ ▷ A) 
+
+    _∘•_   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{Θ}{Θ• : Con• Θ}{σ} → Sub• Δ• Γ• σ → ∀{ρ} → Sub• Θ• Δ• ρ → Sub• Θ• Γ• (σ ∘ ρ)
+    id•    : ∀{Γ}{Γ• : Con• Γ} → Sub• Γ• Γ• id
+    ε•     : ∀{Γ}{Γ• : Con• Γ} → Sub• Γ• ○• ε
+    _‣•_   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{σ} → Sub• Δ• Γ• σ → ∀{t} → Tm• Δ• A• t → Sub• Δ• (Γ• ▷• A•) (σ ‣ t)
+    p•     : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A} → Sub• (Γ• ▷• A•) Γ• p
 
     ι•     : Ty• I.ι
     _⇒•_   : ∀{A}{B} → Ty• A → Ty• B → Ty• (A I.⇒ B)
@@ -91,22 +108,33 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
              Tm• Γ• B• (t I.$ u)
 
     β•     : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A}{B}{B• : Ty• B}{t}{t• : Tm• (Γ• ▷• A•) B• t}{u}{u• : Tm• Γ• A• u} →
-             transp⟨ Tm• Γ• B• ⟩ I.β ((lam• t•) $• u•) ≡ t• [ ⟨ u• ⟩• ]•
+             transp⟨ Tm• Γ• B• ⟩ I.β ((lam• t•) $• u•) ≡ t• [ id• ‣• u• ]•
     η•     : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A}{B}{B• : Ty• B}{t}{t• : Tm• Γ• (A• ⇒• B•) t} →
              transp⟨ Tm• Γ• (A• ⇒• B•) ⟩ I.η (lam• ((t• [ p• ]•) $• q•)) ≡ t•
+    [][]•  : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{Θ}{Θ• : Con• Θ}{A}{A• : Ty• A}{t}{t• : Tm• Γ• A• t}{σ}{σ• : Sub• Δ• Γ• σ}{ρ}{ρ• : Sub• Θ• Δ• ρ} →
+             transp⟨ Tm• Θ• A• ⟩ I.[][] (t• [ σ• ]• [ ρ• ]•) ≡ t• [ σ• ∘• ρ• ]•
+    q[]•   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{t}{t• : Tm• Δ• A• t}{σ}{σ• : Sub• Δ• Γ• σ} →
+             transp⟨ Tm• Δ• A• ⟩ I.q[] (q• [ σ• ‣• t• ]•) ≡ t•
     lam[]• : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{B}{B• : Ty• B}{t}{t• : Tm• (Γ• ▷• A•) B• t}{σ}{σ• : Sub• Δ• Γ• σ} →
-             transp⟨ Tm• Δ• (A• ⇒• B•) ⟩ I.lam[] ((lam• t•) [ σ• ]•) ≡ lam• (t• [ σ• ⁺• ]•)
+             transp⟨ Tm• Δ• (A• ⇒• B•) ⟩ I.lam[] ((lam• t•) [ σ• ]•) ≡ lam• (t• [ σ• ∘• p• ‣• q• ]•)
     $[]•   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{B}{B• : Ty• B}{t}{t• : Tm• Γ• (A• ⇒• B•) t}
-              {u}{u• : Tm• Γ• A• u}{σ}{σ• : Sub• Δ• Γ• σ} →
+             {u}{u• : Tm• Γ• A• u}{σ}{σ• : Sub• Δ• Γ• σ} →
              transp⟨ Tm• Δ• B• ⟩ I.$[] ((t• $• u•) [ σ• ]•) ≡ (t• [ σ• ]•) $• (u• [ σ• ]•)
-    q⟨⟩•    : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A}{u}{u• : Tm• Γ• A• u} →
-             transp⟨ Tm• Γ• A• ⟩ I.q⟨⟩ (q• [ ⟨ u• ⟩• ]•) ≡ u•
-    q+•    : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{σ}{σ• : Sub• Δ• Γ• σ} →
-             transp⟨ Tm• (Δ• ▷• A•) A• ⟩ I.q+ (q• [ σ• ⁺• ]•) ≡ q•
-    p⟨⟩•    : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A}{B}{B• : Ty• B}{t}{t• : Tm• Γ• A• t}{u}{u• : Tm• Γ• B• u} →
-             transp⟨ Tm• Γ• A• ⟩ I.p⟨⟩ (t• [ p• ]• [ ⟨ u• ⟩• ]•) ≡ t•
-    p+•    : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{B}{B• : Ty• B}{σ}{σ• : Sub• Δ• Γ• σ}{t}{t• : Tm• Γ• A• t} →
-             transp⟨ Tm• (Δ• ▷• B•) A• ⟩ I.p+ (t• [ p• ]• [ σ• ⁺• ]•) ≡ t• [ σ• ]• [ p• ]•
+    t[id]• : ∀{Γ}{Γ• : Con• Γ}{A}{A• : Ty• A}{t}{t• : Tm• Γ• A• t} →
+             transp⟨ Tm• Γ• A• ⟩ I.t[id] (t• [ id• ]•) ≡ t•
+    ass•   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{Θ}{Θ• : Con• Θ}{Ω}{Ω• : Con• Ω}
+             {σ}{σ• : Sub• Δ• Γ• σ}{ρ}{ρ• : Sub• Θ• Δ• ρ}{γ}{γ• : Sub• Ω• Θ• γ} →
+             transp⟨ Sub• Ω• Γ• ⟩ I.ass ((σ• ∘• ρ•) ∘• γ•) ≡ σ• ∘• (ρ• ∘• γ•)
+    idl•   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{σ}{σ• : Sub• Δ• Γ• σ} →
+             transp⟨ Sub• Δ• Γ• ⟩ I.idl (id• ∘• σ•) ≡ σ•
+    idr•   : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{σ}{σ• : Sub• Δ• Γ• σ} →
+             transp⟨ Sub• Δ• Γ• ⟩ I.idr (σ• ∘• id•) ≡ σ•
+    ○η•    : ∀{Γ}{Γ• : Con• Γ}{σ}{σ• : Sub• Γ• ○• σ} →
+             transp⟨ Sub• Γ• ○• ⟩ I.○η σ• ≡ ε•
+    ▷β•    : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{σ}{σ• : Sub• Δ• Γ• σ}{t}{t• : Tm• Δ• A• t} →
+             transp⟨ Sub• Δ• Γ• ⟩ I.▷β (p• ∘• (σ• ‣• t•)) ≡ σ•
+    ▷η•    : ∀{Γ}{Γ• : Con• Γ}{Δ}{Δ• : Con• Δ}{A}{A• : Ty• A}{σ}{σ• : Sub• Δ• (Γ• ▷• A•) σ} →
+             transp⟨ Sub• Δ• (Γ• ▷• A•) ⟩ I.▷η (p• ∘• σ• ‣• q• [ σ• ]•) ≡ σ•
 
   -- then we have the induction principle :
  
@@ -124,11 +152,13 @@ record DepModel {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) wher
 
   postulate
 
-    ⟦p⟧•S   : {Γ : I.Con}{A : I.Ty} → ⟦ I.p {Γ}{A} ⟧•S ≡ p•
-    ⟦⟨⟩⟧•S   : {Γ : I.Con}{A : I.Ty}{u : I.Tm Γ A} → ⟦ I.⟨ u ⟩ ⟧•S ≡ ⟨ ⟦ u ⟧•t ⟩•
-    ⟦+⟧•S   : {Γ Δ : I.Con}{A : I.Ty}{σ : I.Sub Δ Γ} → ⟦ I._⁺ {_}{_}{A} σ ⟧•S ≡ ⟦ σ ⟧•S ⁺•
-    {-# REWRITE ⟦p⟧•S ⟦⟨⟩⟧•S ⟦+⟧•S #-}
-
+    ⟦∘⟧•S   : {Γ Δ Θ : I.Con}{σ : I.Sub Δ Γ}{ρ : I.Sub Θ Δ} → ⟦ σ ∘ ρ ⟧•S ≡ ⟦ σ ⟧•S ∘• ⟦ ρ ⟧•S
+    ⟦id⟧•S  : {Γ : I.Con} → ⟦ id {Γ} ⟧•S ≡ id•
+    ⟦ε⟧•S   : {Γ : I.Con} → ⟦ ε {Γ} ⟧•S ≡ ε•
+    ⟦‣⟧•S   : {Γ Δ : I.Con}{σ : I.Sub Δ Γ}{A : I.Ty}{t : I.Tm Δ A} → ⟦ σ ‣ t ⟧•S ≡ ⟦ σ ⟧•S ‣• ⟦ t ⟧•t
+    ⟦p⟧•S   : {Γ : I.Con}{A : I.Ty} → ⟦ p {Γ}{A} ⟧•S ≡ p•
+    {-# REWRITE ⟦∘⟧•S ⟦id⟧•S ⟦ε⟧•S ⟦‣⟧•S ⟦p⟧•S #-}
+    
     ⟦[]⟧•t  : {Γ Δ : I.Con}{A : I.Ty}{t : I.Tm Γ A}{σ : I.Sub Δ Γ} → ⟦ t I.[ σ ] ⟧•t ≡ ⟦ t ⟧•t [ ⟦ σ ⟧•S ]•
     ⟦q⟧•t   : {Γ : I.Con}{A : I.Ty} → ⟦ I.q {Γ}{A} ⟧•t ≡ q•
     ⟦lam⟧•t : {Γ : I.Con}{A B : I.Ty}{t : I.Tm (Γ I.▷ A) B} → ⟦ I.lam t ⟧•t ≡ lam• ⟦ t ⟧•t
@@ -142,6 +172,8 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
   infixr 6 _[_]
   infixr 7 _$_
   infixr 5 _▷_
+  infixr 6 _∘_
+  infixr 5 _‣_
 
   field
   
@@ -156,49 +188,63 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
     ι     : Ty
     _⇒_   : Ty → Ty → Ty
     
+    _∘_   : {Γ Δ Θ : Con} → Sub Δ Γ → Sub Θ Δ → Sub Θ Γ
+    id    : {Γ : Con} → Sub Γ Γ
+    ε     : {Γ : Con} → Sub Γ ○
+    _‣_   : {Γ Δ : Con}{A : Ty} → Sub Δ Γ → Tm Δ A → Sub Δ (Γ ▷ A)
     p     : {Γ : Con}{A : Ty} → Sub (Γ ▷ A) Γ
-    ⟨_⟩    : {Γ : Con}{A : Ty} → Tm Γ A → Sub Γ (Γ ▷ A)
-    _⁺    : {Γ Δ : Con}{A : Ty} → (σ : Sub Δ Γ) → Sub (Δ ▷ A) (Γ ▷ A)
     
     _[_]  : {Γ Δ : Con}{A : Ty} → Tm Γ A → (σ : Sub Δ Γ) → Tm Δ A
     q     : {Γ : Con}{A : Ty} → Tm (Γ ▷ A) A
     lam   : {Γ : Con}{A B : Ty} → Tm (Γ ▷ A) B → Tm Γ (A ⇒ B)
     _$_   : {Γ : Con}{A B : Ty} → Tm Γ (A ⇒ B) → Tm Γ A → Tm Γ B
 
-    β     : {Γ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{u : Tm Γ A} → (lam t) $ u ≡ t [ ⟨ u ⟩ ]
+    β     : {Γ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{u : Tm Γ A} → (lam t) $ u ≡ t [ id ‣ u ]
     η     : {Γ : Con}{A B : Ty}{t : Tm Γ (A ⇒ B)} → lam ((t [ p ]) $ q) ≡ t
-    lam[] : {Γ Δ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → (lam t) [ σ ] ≡ lam (t [ σ ⁺ ])
+    [][]  : {Γ Δ Θ : Con}{A : Ty}{t : Tm Γ A}{σ : Sub Δ Γ}{ρ : Sub Θ Δ} → t [ σ ] [ ρ ] ≡ t [ σ ∘ ρ ]
+    q[]   : {Γ Δ : Con}{A : Ty}{t : Tm Δ A}{σ : Sub Δ Γ} → q [ σ ‣ t ] ≡ t
+    lam[] : {Γ Δ : Con}{A B : Ty}{t : Tm (Γ ▷ A) B}{σ : Sub Δ Γ} → (lam t) [ σ ] ≡ lam (t [ σ ∘ p ‣ q ])
     $[]   : {Γ Δ : Con}{A B : Ty}{t : Tm Γ (A ⇒ B)}{u : Tm Γ A}{σ : Sub Δ Γ} → (t $ u) [ σ ] ≡ (t [ σ ]) $ (u [ σ ])
-    q⟨⟩    : {Γ : Con}{A : Ty}{u : Tm Γ A} → q [ ⟨ u ⟩ ] ≡ u
-    q+    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ Γ} → q [ σ ⁺ ] ≡ q {_}{A}
-    p⟨⟩    : {Γ : Con}{A B : Ty}{t : Tm Γ A}{u : Tm Γ B} → (t [ p ] [ ⟨ u ⟩ ]) ≡ t
-    p+    : {Γ Δ : Con}{A B : Ty}{σ : Sub Δ Γ}{t : Tm Γ A} → (t [ p {_}{B} ] [ σ ⁺ ]) ≡ t [ σ ] [ p ]
+    t[id] : {Γ : Con}{A : Ty}{t : Tm Γ A} → t [ id ] ≡ t
+    ass   : {Γ Δ Θ Ω : Con}{σ : Sub Δ Γ}{ρ : Sub Θ Δ}{γ : Sub Ω Θ} → (σ ∘ ρ) ∘ γ ≡ σ ∘ (ρ ∘ γ)
+    idl   : {Γ Δ : Con}{σ : Sub Δ Γ} → id ∘ σ ≡ σ
+    idr   : {Γ Δ : Con}{σ : Sub Δ Γ} → σ ∘ id ≡ σ
+    ○η    : {Γ : Con}{σ : Sub Γ ○} → σ ≡ ε
+    ▷β    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ Γ}{t : Tm Δ A} → p ∘ (σ ‣ t) ≡ σ
+    ▷η    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ (Γ ▷ A)} → (p ∘ σ ‣ q [ σ ]) ≡ σ
 
   DM : DepModel {lc} {ls} {lty} {ltm}
   DM = record
      { Con•   = λ _ → Con
      ; Ty•    = λ _ → Ty
-     ; Sub•   = λ Γ Δ _ → Sub Γ Δ
+     ; Sub•   = λ Δ Γ _ → Sub Δ Γ
      ; Tm•    = λ Γ A _ → Tm Γ A
      ; ○•     = ○
      ; _▷•_   = λ Γ A → Γ ▷ A
+     ; _∘•_   = λ σ ρ → σ ∘ ρ
+     ; id•    = id
+     ; ε•     = ε
+     ; _‣•_   = λ σ t → σ ‣ t
      ; p•     = p
-     ; ⟨_⟩•    = ⟨_⟩
-     ; _⁺•    = _⁺
      ; ι•     = ι
      ; _⇒•_   = _⇒_
      ; _[_]•  = λ t σ → t [ σ ]
      ; q•     = q
      ; lam•   = lam
-     ; _$•_   = λ t u → t $ u
+     ; _$•_   = λ u v → u $ v
      ; β•     = β
      ; η•     = η
+     ; [][]•  = [][]
+     ; q[]•   = q[]
      ; lam[]• = lam[]
      ; $[]•   = $[]
-     ; q⟨⟩•    = q⟨⟩
-     ; q+•    = q+
-     ; p⟨⟩•    = p⟨⟩
-     ; p+•    = p+
+     ; t[id]• = t[id]
+     ; ass•   = ass 
+     ; idl•   = idl
+     ; idr•   = idr
+     ; ○η•    = ○η
+     ; ▷β•    = ▷β
+     ; ▷η•    = ▷η
      }
   module DM = DepModel DM
 

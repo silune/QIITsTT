@@ -15,38 +15,29 @@ module TTInterp where
 
 St : Model
 St = record
-  { Con = Set
-  ; Ty = λ Γ → (Γ → Set)
-  ; Sub = λ Γ Δ → (Γ → Δ)
-  ; Tm = λ Γ A → ((γ : Γ) → A γ)
-  -- Contexts are Σ types (of terms ?)
-  ; ○ = 𝟙 
-  ; _▷_ = λ Γ A → Σ Γ A
-  -- Types Are usual types, we don't care about U and El
-  ; U = λ _ → 𝟘
-  ; El = λ f γ → 𝟘-elim (f γ)
-  ; _[_] = λ A σ δ → A (σ δ)
-  ; Π = λ A B γ → ((a : A γ) → (B (γ , a)))
-  -- Substitutions are functions between contexts
-  ; ρ = pr₁
-  ; ⟨_⟩ = λ u γ → (γ , u γ)
-  ; _⁺ = λ σ → (λ {(δ , a)  → (σ δ) , a})
-  -- Terms are functions from a context into a type over this context
-  ; _⟦_⟧ = λ u σ → (λ γ → u (σ γ))
-  ; q = pr₂
-  ; lam = λ u → (λ γ → (λ x → u (γ , x)))
-  ; app = λ u → (λ {(γ , a) → u γ a})
-  -- equations are by refl
-  ; Π[] = refl
-  ; β = refl
-  ; η = refl
-  ; lam[] = refl
-  ; U[] = refl
-  ; El[] = refl
-  ; q⟨⟩ = λ {refl → refl}
-  ; q+ = λ {refl → refl}
-  ; ρ⟨⟩ = λ {refl → refl}
-  ; ρ+ = λ {refl → refl}
-  }
+   { Con   = Set
+   ; Ty    = Set
+   ; Sub   = λ Γ Δ → (Γ → Δ)
+   ; Tm    = λ Γ A → (Γ → A)
+   ; ○     = 𝟙
+   ; _▷_   = λ Γ A → Γ × A
+   ; ι     = 𝟙
+   ; _⇒_   = λ A B → (A → B)
+   ; ρ     = pr₁
+   ; ⟨_⟩    = λ u → (λ γ → γ , u γ)
+   ; _⁺    = λ σ → (λ {(γ , u) → σ γ , u})
+   ; _[_]  = λ u σ → (λ γ → u (σ γ))
+   ; q     = pr₂
+   ; lam   = λ t → (λ γ x → t (γ , x))
+   ; _$_   = λ f x → (λ γ → f γ (x γ))
+   ; β     = refl
+   ; η     = refl
+   ; lam[] = refl
+   ; $[]   = refl
+   ; q⟨⟩    = refl
+   ; q+    = refl
+   ; ρ⟨⟩    = refl
+   ; ρ+    = refl
+   }
 
 \end{code}

@@ -61,14 +61,13 @@ module Equality where
 
   cong$i : ∀{l}{A : Set l}{l'}{B : A → Set l'}{f g : {a : A} → B a} → (λ {x} → f {x}) ≡ g → (x : A) → f {x} ≡ g {x}
   cong$i refl x = refl
-
-  postulate coe : ∀{l}{A B : Set l} → A ≡ B → A → B
-  postulate coerefl : ∀{l}{A : Set l}{e : A ≡ A}{x : A} → coe e x ≡ x
-  {-# REWRITE coerefl #-}
-
+  
   -- (lemma 2.3.2 HoTT) (need to be postulate when working with Prop instead of Set ?)
-  transp⟨_⟩ : ∀{l}{A : Set l}{l'}(P : A → Set l'){x y : A} → x ≡ y → P x → P y
-  transp⟨_⟩ {l}{A}{l'} P {x}{y} e px = coe {l'}{P x}{P y} (cong⟨ P ⟩ e) px
+  postulate transp⟨_⟩ : ∀{l}{A : Set l}{l'}(P : A → Set l'){x y : A} → x ≡ y → P x → P y
+  -- transp⟨ P ⟩ refl px = px
+
+  postulate transprefl : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a : A}{e : a ≡ a}{p : P a} → transp⟨ P ⟩ e p ≡ p
+  {-# REWRITE transprefl #-}
 
   _,=_ : ∀{l}{l'} → {A : Set l}{x x' : A} → (e : x ≡ x') →
                     {B : A → Set l'}{y : B x}{y' : B x'} → transp⟨ B ⟩ e y ≡ y' →
@@ -88,12 +87,16 @@ module Equality where
   transpΣ refl = refl
 
   transpπ₁ : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}{C : A → B → Set l''}{a a' : A}(e : a ≡ a'){w : Σ B (C a)} →
-             pr₁ (transp⟨_⟩ {l}{A}{l' ⊔ l''} (λ a → Σ B (C a)) {a} {a'} e w) ≡ pr₁ w
+             pr₁ (transp⟨ (λ a → Σ B (C a)) ⟩ e w) ≡ pr₁ w
   transpπ₁ refl = refl
 
   transp× : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}{a a' : A}{x : B a × C a} → (e : a ≡ a') →
             transp⟨ (λ a → B a × C a) ⟩ e x ≡ (transp⟨ B ⟩ e (pr₁ x)) , (transp⟨ C ⟩ e (pr₂ x))
   transp× refl = refl
+
+  -- (lemma 2.3.5 HoTT)
+  transpconst : ∀{l}{A : Set l}{l'}{P : Set l'}{x y : A}(eq : x ≡ y){p : P} → transp⟨ (λ _ → P) ⟩ eq p ≡ p
+  transpconst refl = refl
 
   transp$ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}(f : (a : A) → B a → C a){a a' : A}(e : a ≡ a'){b : B a} →
             f a' (transp⟨ B ⟩ e b) ≡ transp⟨ C ⟩ e (f a b)
@@ -102,6 +105,10 @@ module Equality where
   transp→ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}(C : A → Set l''){a a' : A}(e : a ≡ a'){f : B a → C a} → 
             transp⟨ (λ a → B a → C a) ⟩ e f ≡ λ b' → transp⟨ C ⟩ e (f (transp⟨ B ⟩ (sym e) b'))
   transp→ C refl = refl
+
+  transpcong : ∀{l}{A : Set l}{l'}{B : Set l'}{l''}(C : B → Set l'')(f : A → B){a a' : A}(e : a ≡ a'){c : C (f a)} →
+               transp⟨_⟩ {A = B} C {f a} {f a'} (cong⟨ f ⟩ e) c ≡ transp⟨_⟩ {A = A} (λ x → C (f x)) {a} {a'} e c
+  transpcong _ _ refl = refl
 
   transptransp : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' a'' : A}(e : a ≡ a'){e' : a' ≡ a''}{x : P a} →
                  transp⟨ P ⟩ e' (transp⟨ P ⟩ e x) ≡ transp⟨ P ⟩ (e ■ e') x

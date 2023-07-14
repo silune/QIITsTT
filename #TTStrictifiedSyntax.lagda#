@@ -301,7 +301,8 @@ record DepModelS {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) whe
                   (transptransp (Tm• Θ• A•) (cong⟨ (λ x → x [ ρ ]) ⟩ ([]* {Γ}{Δ}{A}{t}{σ})) ([]* ■ I.[][])) ■
                   (sym (transptransp (Tm• Θ• A•) ([][] {Γ}{Δ}{Θ}{A}{t}{σ}{ρ}) []*)) ■
                   (cong⟨ transp⟨ Tm• Θ• A• ⟩ []* ⟩ [][]•)
-       ; q[]•   = {!λ {Γ}{Γ•}{Δ}{Δ•}{A}{A•}{t}{t•}{σ}{σ•} → ?!}
+       ; q[]•   = λ {Γ}{Γ•}{Δ}{Δ•}{A}{A•}{t}{t•}{σ}{σ•} →
+                  {!!}
        ; lam[]• = {!!}
        ; $[]•   = {!!}
        ; t[id]• = {!!}

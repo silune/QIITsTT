@@ -67,12 +67,12 @@ module I where
 
   --Renaming
   data isVar : (Γ : Con) → (A : Ty) → Tm Γ A → Set where
-    zero   : ∀{Γ}{A} → isVar (Γ ▷ A) A q
-    succ   : ∀{Γ}{A B}{t : Tm Γ A} → isVar Γ A t → isVar (Γ ▷ B) A (t [ p ])
+    zero : ∀{Γ}{A} → isVar (Γ ▷ A) A q
+    succ : ∀{Γ}{A B}{t : Tm Γ A} → isVar Γ A t → isVar (Γ ▷ B) A (t [ p ])
 
   data isRen : (Δ Γ : Con) → Sub Δ Γ → Set where
-    εRen   : ∀{Γ} → isRen Γ ○ ε
-    _‣_Ren : ∀{Δ Γ}{σ}{A}{t} → isRen Δ Γ σ → isVar Δ A t → isRen Δ (Γ ▷ A) (σ ‣ t) 
+    εRen : ∀{Γ} → isRen Γ ○ ε
+    ‣Ren : ∀{Δ Γ}{σ}{A}{t} → isRen Δ Γ σ → isVar Δ A t → isRen Δ (Γ ▷ A) (σ ‣ t) 
 
 --------------------------------------------------
 
@@ -265,5 +265,29 @@ record Model {lc}{ls}{lty}{ltm} : Set (lsuc (lc ⊔ ls ⊔ lty ⊔ ltm)) where
   ⟦_⟧S = DM.⟦_⟧•S
   ⟦_⟧t : {Γ : I.Con}{A : I.Ty} → I.Tm Γ A → Tm ⟦ Γ ⟧C ⟦ A ⟧T
   ⟦_⟧t = DM.⟦_⟧•t
+
+
+--Some properties on Renaming :
+
+open I
+
+subDist : ∀{Γ Δ Θ : Con}{A : Ty}{σ : Sub Δ Γ}{t : Tm Δ A}{ω : Sub Θ Δ} →
+          (σ ‣ t) ∘ ω ≡ (σ ∘ ω) ‣ (t [ ω ])
+subDist {Γ}{Δ}{Θ}{A}{σ}{t}{ω} = (sym ▷η) ■
+                                (cong⟨ _‣ q [ (σ ‣ t) ∘ ω ] ⟩ ass) ■
+                                (cong⟨ (λ x → (x ∘ ω) ‣ q [ (σ ‣ t) ∘ ω ]) ⟩ ▷β) ■
+                                (cong⟨ (σ ∘ ω) ‣_ ⟩ (sym [][])) ■
+                                (cong⟨ (λ x → (σ ∘ ω) ‣ x [ ω ]) ⟩ q[])
+
+wkRen : ∀{Γ}{Δ}{σ}{A} →
+        isRen Δ Γ σ → (isRen (Δ ▷ A) Γ (σ ∘ p))
+wkRen {○}{Δ}{σ}{A} σR = transp⟨ isRen (Δ ▷ A) ○ ⟩ (sym ○η) εRen
+wkRen {Γ ▷ B}{Δ}{σ}{A} (‣Ren σ* t*) = transp⟨ isRen (Δ ▷ A) (Γ ▷ B) ⟩ (sym subDist) (‣Ren (wkRen σ*) (succ t*))
+
+pRen : ∀{Γ}{A} →
+       isRen (Γ I.▷ A) Γ I.p
+pRen {○}{A} = transp⟨ isRen (○ ▷ A) ○ ⟩ (sym ○η) εRen
+pRen {Γ ▷ B}{A} = transp⟨ isRen ((Γ ▷ B) ▷ A) (Γ ▷ B) ⟩ ▷η (‣Ren (wkRen (pRen {Γ})) (succ zero))
+
 
 \end{code}

@@ -65,7 +65,7 @@ module I where
     ▷β    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ Γ}{t : Tm Δ A} → p ∘ (σ ‣ t) ≡ σ
     ▷η    : {Γ Δ : Con}{A : Ty}{σ : Sub Δ (Γ ▷ A)} → (p ∘ σ ‣ q [ σ ]) ≡ σ
 
-  --Renaming :
+  --Renaming
   data isVar : (Γ : Con) → (A : Ty) → Tm Γ A → Set where
     zero   : ∀{Γ}{A} → isVar (Γ ▷ A) A q
     succ   : ∀{Γ}{A B}{t : Tm Γ A} → isVar Γ A t → isVar (Γ ▷ B) A (t [ p ])

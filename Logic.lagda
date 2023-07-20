@@ -15,8 +15,10 @@ module Logic where
     triv : ⊤
 
   -- Unit type Set
-  data 𝟙 {l} : Set l where
-    ★ : 𝟙
+  record 𝟙 {l} : Set l where
+
+  ★ : ∀{l} → 𝟙 {l}
+  ★ = record {}
 
   -- Empty type Prop
   data ⊥ : Prop where

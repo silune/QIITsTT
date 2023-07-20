@@ -102,6 +102,11 @@ module Equality where
             f a' (transp⟨ B ⟩ e b) ≡ transp⟨ C ⟩ e (f a b)
   transp$ _ refl = refl
 
+  transp$₂ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}{C : A → Set l''}{l'''}{D : A → Set l'''}
+             (f : (a : A) → B a → C a → D a){a a' : A}(e : a ≡ a'){b : B a}{c : C a} →
+             f a' (transp⟨ B ⟩ e b) (transp⟨ C ⟩ e c) ≡ transp⟨ D ⟩ e (f a b c)
+  transp$₂ _ refl = refl
+
   transp→ : ∀{l}{A : Set l}{l'}{B : A → Set l'}{l''}(C : A → Set l''){a a' : A}(e : a ≡ a'){f : B a → C a} → 
             transp⟨ (λ a → B a → C a) ⟩ e f ≡ λ b' → transp⟨ C ⟩ e (f (transp⟨ B ⟩ (sym e) b'))
   transp→ C refl = refl
@@ -113,6 +118,17 @@ module Equality where
   transpeq : ∀{l}{A : Set l}{l'}{P : A → Set l'}{a a' b : A}(e : a ≡ b)(e' : a' ≡ b){x : P a}{y : P a'} → transp⟨ P ⟩ (e ■ (sym e')) x ≡ y →
              transp⟨ P ⟩ e x ≡ transp⟨ P ⟩ e' y
   transpeq refl refl refl = refl
+
+  transp∘ : ∀{l}{A : Set l}{l'}{R : A → A → Set l'} → (_⊛_ : ∀{x y z} → R x y → R y z → R x z) →
+            ∀{x x' y y' z z' : A} → (eqx : x ≡ x') → (eqy : y ≡ y') → (eqz : z ≡ z') →
+            ∀{f : R x y}{g : R y z} → 
+            transp⟨ (λ p → R (π₁ p) (π₂ p)) ⟩ (eqx ,= eqz) (f ⊛ g) ≡
+            (transp⟨ (λ p → R (π₁ p) (π₂ p)) ⟩ (eqx ,= eqy) f) ⊛ (transp⟨ (λ p → R (π₁ p) (π₂ p)) ⟩ (eqy ,= eqz) g)
+  transp∘ _⊛_ refl refl refl = refl
+
+  transpπ : ∀{l}{A : Set l}{l'}{R : A → A → Set l'}{x x' : A}(e : x ≡ x'){a : R x x} →
+            transp⟨ (λ p → R (π₁ p) (π₂ p)) ⟩ (e ,= e) a ≡ transp⟨ (λ p → R p p) ⟩ e a
+  transpπ _ = refl
 
   -- Functional extensionality (Axiom 2.9.3 HoTT)
 
